@@ -1,7 +1,11 @@
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
 
-# Mengubah data menjadi DataFrame pandas
+# Inisialisasi data
 data = {
     'tanggal': ['01/06/2024', '02/06/2024', '03/06/2024', '04/06/2024', '05/06/2024',
                 '06/06/2024', '07/06/2024', '08/06/2024', '09/06/2024', '10/06/2024',
@@ -23,30 +27,57 @@ data = {
               904.89, 1082.02, 940.26, 1126.84, 445.78, 162.73, 476.38, 173.53, 462.24, 184.33]
 }
 
+# Membuat DataFrame dari data
 df = pd.DataFrame(data)
 
-# Scatterplot
+# Ekstraksi fitur tanggal
+df['tanggal'] = pd.to_datetime(df['tanggal'], format='%d/%m/%Y')
+df['bulan'] = df['tanggal'].dt.month
+df['tahun'] = df['tanggal'].dt.year
+
+# Memisahkan fitur dan target
+X = df[['harga_satuan', 'bulan']]
+y = df['jumlah']
+
+# Membagi data menjadi data latih dan data uji
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Membuat model regresi linier
+model = LinearRegression()
+
+# Melatih model
+model.fit(X_train, y_train)
+
+# Melakukan prediksi
+y_pred = model.predict(X_test)
+
+# Menghitung mean squared error
+mse = mean_squared_error(y_test, y_pred)
+print("Mean Squared Error:", mse)
+
+# Prediksi untuk bulan-bulan berikutnya dalam tahun yang sama
+bulan_terakhir = df['bulan'].max()
+tahun_terakhir = df['tahun'].max()
+bulan_prediksi = range(bulan_terakhir + 1, 13)
+tahun_prediksi = [tahun_terakhir] * len(bulan_prediksi)
+tanggal_prediksi = pd.to_datetime(['01/{:02d}/{}'.format(bulan, tahun) for bulan, tahun in zip(bulan_prediksi, tahun_prediksi)])
+
+# Memprediksi jumlah penjualan untuk setiap bulan berikutnya
+X_prediksi = pd.DataFrame({'harga_satuan': df['harga_satuan'].mean(), 'bulan': bulan_prediksi})
+jumlah_prediksi = model.predict(X_prediksi)
+
+
+total_prediksi_tahunan = sum(jumlah_prediksi)
+
+print("Total prediksi jumlah penjualan untuk bulan-bulan berikutnya dalam tahun yang sama:", total_prediksi_tahunan)
+
+# Visualisasi data asli dan prediksi
 plt.figure(figsize=(10, 6))
-for produk in df['nama_produk'].unique():
-    subset = df[df['nama_produk'] == produk]
-    plt.scatter(subset['tanggal'], subset['jumlah'], label=produk)
+plt.plot(df['tanggal'], df['jumlah'], label='Data Asli')
+plt.plot(tanggal_prediksi, jumlah_prediksi, 'r--', label='Prediksi')
 plt.xlabel('Tanggal')
 plt.ylabel('Jumlah')
-plt.title('Scatterplot Jumlah Penjualan per Tanggal')
+plt.title('Prediksi Jumlah Penjualan Martabak')
 plt.legend()
-plt.show()
-
-# Histogram
-plt.figure(figsize=(10, 6))
-plt.hist(df['harga_satuan'], bins=10, color='skyblue', edgecolor='black')
-plt.xlabel('Harga Satuan')
-plt.ylabel('Frekuensi')
-plt.title('Histogram Harga Satuan')
-plt.show()
-
-# Pie Chart
-total_per_produk = df.groupby('nama_produk')['total'].sum()
-plt.figure(figsize=(8, 8))
-plt.pie(total_per_produk, labels=total_per_produk.index, autopct='%1.1f%%', startangle=140)
-plt.title('Pie Chart Total Penjualan per Produk')
+plt.grid(True)
 plt.show()
