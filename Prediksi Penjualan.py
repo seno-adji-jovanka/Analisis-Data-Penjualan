@@ -1,9 +1,5 @@
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import train_test_split
 
 # Mengubah data menjadi DataFrame pandas
 data = {
@@ -13,61 +9,44 @@ data = {
                 '16/06/2024', '17/06/2024', '18/06/2024', '19/06/2024', '20/06/2024',
                 '21/06/2024', '22/06/2024', '23/06/2024', '24/06/2024', '25/06/2024',
                 '26/06/2024', '27/06/2024', '28/06/2024', '29/06/2024', '30/06/2024'],
-    'nama_produk': ['mobil', 'roda', 'wiper', 'velg', 'mobil',
-                    'roda', 'wiper', 'velg', 'mobil', 'roda',
-                    'wiper', 'velg', 'mobil', 'roda', 'wiper',
-                    'velg', 'mobil', 'roda', 'wiper', 'velg',
-                    'mobil', 'roda', 'wiper', 'velg', 'mobil',
-                    'roda', 'wiper', 'velg', 'mobil', 'roda'],
+    'nama_produk': ['martabak kacang', 'martabak keju', 'martabak coklat', 'martabak kosongan', 'martabak kacang',
+                    'martabak keju', 'martabak coklat', 'martabak kosongan', 'martabak kacang', 'martabak keju',
+                    'martabak coklat', 'martabak kosongan', 'martabak kacang', 'martabak keju', 'martabak coklat',
+                    'martabak kosongan', 'martabak kacang', 'martabak keju', 'martabak coklat', 'martabak kosongan',
+                    'martabak kacang', 'martabak keju', 'martabak coklat', 'martabak kosongan', 'martabak kacang',
+                    'martabak keju', 'martabak coklat', 'martabak kosongan', 'martabak kacang', 'martabak keju'],
     'jumlah': [150, 120, 30, 43, 24, 20, 45, 30, 21, 34, 100, 230, 11, 200, 31, 123, 134, 234, 154, 72,
                80, 92, 77, 89, 34, 12, 34, 12, 31, 12],
-    'harga_satuan': [50000, 3000, 100, 300, 40000, 3000, 400, 600, 800, 636, 681, 726, 771, 816, 861, 906, 951, 996, 1041, 1086,
-                     1131, 1176, 1221, 1266, 1311, 1356, 1401, 1446, 1491, 1536],
-    'total': [7500000, 360000, 3000, 12900, 960000, 60000, 18000, 18000, 16800, 21600, 68100, 167000, 8482, 163222, 26694, 111452, 127449, 233090, 160331, 78200,
-              90489, 108202, 94026, 112684, 44578, 16273, 47638, 17353, 46224, 18433]
+    'harga_satuan': [5, 3, 1, 3, 4, 3, 4, 6, 8, 6.36, 6.81, 7.26, 7.71, 8.16, 8.61, 9.06, 9.51, 9.96, 10.41, 10.86,
+                     11.31, 11.76, 12.21, 12.66, 13.11, 13.56, 14.01, 14.46, 14.91, 15.36],
+    'total': [750, 360, 30, 129, 96, 60, 180, 180, 168, 216.28, 681.11, 1670.06, 84.82, 1632.22, 266.94, 1114.52, 1274.49, 2330.9, 1603.31, 782,
+              904.89, 1082.02, 940.26, 1126.84, 445.78, 162.73, 476.38, 173.53, 462.24, 184.33]
 }
 
 df = pd.DataFrame(data)
 
-# Mengisolasi data penjualan mobil
-mobil_df = df[df['nama_produk'] == 'mobil'].copy()
-
-# Mengonversi tanggal menjadi format datetime
-mobil_df['tanggal'] = pd.to_datetime(mobil_df['tanggal'], format='%d/%m/%Y')
-
-# Mengubah tanggal menjadi fitur numerik (ordinal)
-mobil_df['tanggal_ordinal'] = mobil_df['tanggal'].apply(lambda x: x.toordinal())
-
-# Menyiapkan data untuk regresi
-X = mobil_df[['tanggal_ordinal']]
-y = mobil_df['jumlah']
-
-# Membagi data menjadi training dan testing set
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# Membuat model regresi linear
-model = LinearRegression()
-model.fit(X_train, y_train)
-
-# Prediksi penjualan mobil hingga akhir tahun
-future_dates = pd.date_range(start='01/07/2024', end='31/12/2024', freq='D')
-future_dates_ordinal = future_dates.map(lambda x: x.toordinal()).to_numpy().reshape(-1, 1)
-
-# Melakukan prediksi
-predictions = model.predict(future_dates_ordinal)
-
-# Membuat DataFrame hasil prediksi
-predictions_df = pd.DataFrame({
-    'tanggal': future_dates,
-    'prediksi_jumlah': predictions
-})
-
-# Visualisasi hasil prediksi dan penjualan mobil aktual
+# Scatterplot
 plt.figure(figsize=(10, 6))
-plt.plot(mobil_df['tanggal'], mobil_df['jumlah'], label='Jumlah Penjualan Aktual', marker='o')
-plt.plot(predictions_df['tanggal'], predictions_df['prediksi_jumlah'], label='Prediksi Jumlah Penjualan', linestyle='--', color='red')
+for produk in df['nama_produk'].unique():
+    subset = df[df['nama_produk'] == produk]
+    plt.scatter(subset['tanggal'], subset['jumlah'], label=produk)
 plt.xlabel('Tanggal')
-plt.ylabel('Jumlah Penjualan')
-plt.title('Prediksi Jumlah Penjualan Mobil hingga Akhir Tahun 2024')
+plt.ylabel('Jumlah')
+plt.title('Scatterplot Jumlah Penjualan per Tanggal')
 plt.legend()
+plt.show()
+
+# Histogram
+plt.figure(figsize=(10, 6))
+plt.hist(df['harga_satuan'], bins=10, color='skyblue', edgecolor='black')
+plt.xlabel('Harga Satuan')
+plt.ylabel('Frekuensi')
+plt.title('Histogram Harga Satuan')
+plt.show()
+
+# Pie Chart
+total_per_produk = df.groupby('nama_produk')['total'].sum()
+plt.figure(figsize=(8, 8))
+plt.pie(total_per_produk, labels=total_per_produk.index, autopct='%1.1f%%', startangle=140)
+plt.title('Pie Chart Total Penjualan per Produk')
 plt.show()
